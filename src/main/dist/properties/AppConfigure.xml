@@ -1,0 +1,6 @@
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+    <bean id="manager" class="edu.mcw.rgd.ratMutationSequences.Manager">
+        <property name="version" value="rat-mutation-sequences-pipeline  -- build May 25, 2023" />
+    </bean>
+</beans>
