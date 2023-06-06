@@ -107,6 +107,8 @@ public class Manager {
                         case 1:
                         case 2:
                         case 3:
+                            String status = cell.getStringCellValue();
+                            el.setStatus(status);
                             break;
                         case 4: // col 4-5 about allele
                             String id = formatter.formatCellValue(cell);
@@ -204,7 +206,7 @@ public class Manager {
 //                    dao.updateMapData(el.getMapData());
                 }
                 else {
-                    dao.insertVariant(el.getVariant(),el.getStrain().getLastStatus(), el.getVariant().getSpeciesTypeKey());
+                    dao.insertVariant(el.getVariant(),el.getStatus(), el.getVariant().getSpeciesTypeKey());
                     logger.info("Inserting variant, mapData, and association for RgdId: " + el.getVariant().getRgdId());
                     el.getMapData().setRgdId(el.getVariant().getRgdId());
                     dao.insertMapData(el.getMapData());
@@ -222,7 +224,7 @@ public class Manager {
         }
         catch (Exception e){
             e.printStackTrace();
-            logger.info(e.getStackTrace());
+            logger.info(e);
         }
         finally {
             if (pkg!=null)

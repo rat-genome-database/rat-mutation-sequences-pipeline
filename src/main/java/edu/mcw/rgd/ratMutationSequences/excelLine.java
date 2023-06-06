@@ -13,6 +13,7 @@ public class excelLine {
     private RgdVariant variant;
     private MapData mapData;
     private List<RgdVariant> existingVars;
+    private String status;
 
     public Strain getStrain() {
         return strain;
@@ -52,5 +53,13 @@ public class excelLine {
 
     public void setExistingVars(List<RgdVariant> existingVars) {
         this.existingVars = existingVars;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
