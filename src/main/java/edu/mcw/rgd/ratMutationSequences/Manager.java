@@ -168,7 +168,7 @@ public class Manager {
                         case 14: // col 14/15 use getRefAllele method and make changes, so it is not gwas
                             if (isDeletion){
                                 String ref = getRefAllele(md.getMapKey(),md).replaceAll("[\\n\\r\\s]", "");
-                                rv.setRefNuc(ref);
+                                rv.setRefNuc(ref.toUpperCase());
                             }
                             break;
                         case 15:
@@ -207,7 +207,7 @@ public class Manager {
                 }
                 else {
                     dao.insertVariant(el.getVariant(),el.getStatus(), el.getVariant().getSpeciesTypeKey());
-                    logger.info("Inserting variant, mapData, and association for RgdId: " + el.getVariant().getRgdId());
+                    logger.info("\tInserting variant, mapData, and association for RgdId: " + el.getVariant().getRgdId());
                     el.getMapData().setRgdId(el.getVariant().getRgdId());
                     dao.insertMapData(el.getMapData());
                     // create association
@@ -297,9 +297,9 @@ public class Manager {
             List<MapData> mapData = dao.getMapData(var.getRgdId());// check md if latest assembly exists, if not return false
             for (MapData m : mapData){
                 if (m.getMapKey()==dao.getPrimaryRefAssembly(3)) {
-                    logger.info("\tChecking mapdata for RGDID: " +var.getRgdId());
-                    logger.info("\t\tIn DB; chromosome: " +m.getChromosome() + "\tstart:" + m.getStartPos()+"\tstop: "+m.getStopPos() );
-                    logger.info("\t\tIn File; chromosome: " +md.getChromosome() + "\tstart:" + md.getStartPos()+"\tstop: "+md.getStopPos() );
+                    logger.info("\t\tChecking mapdata for RGDID: " +var.getRgdId());
+                    logger.info("\t\t\tIn DB; chromosome: " +m.getChromosome() + "\tstart:" + m.getStartPos()+"\tstop: "+m.getStopPos() );
+                    logger.info("\t\t\tIn File; chromosome: " +md.getChromosome() + "\tstart:" + md.getStartPos()+"\tstop: "+md.getStopPos() );
                     mapExist = true;
                 }
             }
@@ -309,14 +309,14 @@ public class Manager {
 //                v.setRgdId(var.getRgdId());
 //                v.setDescription(var.getDescription());
 //                v.setNotes(var.getNotes());
-                logger.info("\tChecking nucleotides for RGDID: " +var.getRgdId());
-                logger.info("\t\tIn DB; Reference: "+var.getRefNuc() +"\tVariant:" + var.getVarNuc() );
-                logger.info("\t\tIn File; Reference: "+v.getRefNuc() +"\tVariant:" + v.getVarNuc() );
+                logger.info("\t\tChecking nucleotides for RGDID: " +var.getRgdId());
+                logger.info("\t\t\tIn DB; Reference: "+var.getRefNuc() +"\tVariant:" + var.getVarNuc() );
+                logger.info("\t\t\tIn File; Reference: "+v.getRefNuc() +"\tVariant:" + v.getVarNuc() );
 //                el.setVariant(v);
                 return false;
             }
             else {
-                logger.info("\t\tNucleotides are the same.");
+                logger.info("\t\t\tNucleotides are the same.");
             }
         }
         return false;
