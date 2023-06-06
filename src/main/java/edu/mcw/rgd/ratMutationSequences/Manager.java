@@ -88,7 +88,6 @@ public class Manager {
                 }
                 // first 2 rows are about the columns
                 Iterator <Cell> cellIterator = row.cellIterator();
-                List<RgdVariant> vars;
                 excelLine el = new excelLine();
                 MapData md = new MapData();
                 RgdVariant rv = new RgdVariant();
@@ -114,8 +113,6 @@ public class Manager {
                             String id = formatter.formatCellValue(cell);
                             Gene g = dao.getGene(Integer.parseInt(id));
                             el.setAllele(g);
-                            vars = dao.getRgdVariantsByGeneId(g.getRgdId());
-                            el.setExistingVars(vars);
                             break;
                         case 5:
                             String tmp = cell.getStringCellValue().replace("<sup>","");
@@ -199,24 +196,27 @@ public class Manager {
             }
 
             for (excelLine el : allelicVariants){
+                List<RgdVariant> vars;
+                vars = dao.getRgdVariantsByGeneId(el.getAllele().getRgdId());
+                el.setExistingVars(vars);
                 if (varExist(el)){
                     // update RgdVariant
-                    logger.info("RGD Variant object being updated: "+el.getVariant().getRgdId());
+                    logger.info("RGD Variant object with no change: "+el.getVariant().getRgdId());
 //                    dao.updateVariant(el.getVariant());
 //                    dao.updateMapData(el.getMapData());
                 }
                 else {
-                    dao.insertVariant(el.getVariant(),el.getStatus(), el.getVariant().getSpeciesTypeKey());
+//                    dao.insertVariant(el.getVariant(),el.getStatus(), el.getVariant().getSpeciesTypeKey());
                     logger.info("\tInserting variant, mapData, and association for RgdId: " + el.getVariant().getRgdId());
                     el.getMapData().setRgdId(el.getVariant().getRgdId());
-                    dao.insertMapData(el.getMapData());
+//                    dao.insertMapData(el.getMapData());
                     // create association
                     Association a = new Association();
                     a.setAssocType("variant_to_gene");
                     a.setAssocSubType("allele");
                     a.setMasterRgdId(el.getVariant().getRgdId());
                     a.setDetailRgdId(el.getAllele().getRgdId());
-                    dao.insertAssociation(a);
+//                    dao.insertAssociation(a);
                 }
             }
 
@@ -305,7 +305,7 @@ public class Manager {
             }
             if (!mapExist)
                 return false;
-            if (var.getName().equals(v.getName()) && !var.getRefNuc().equals(v.getRefNuc())){
+            if (var.getName().equals(v.getName())){
 //                v.setRgdId(var.getRgdId());
 //                v.setDescription(var.getDescription());
 //                v.setNotes(var.getNotes());
@@ -313,6 +313,8 @@ public class Manager {
                 logger.info("\t\t\tIn DB; Reference: "+var.getRefNuc() +"\tVariant:" + var.getVarNuc() );
                 logger.info("\t\t\tIn File; Reference: "+v.getRefNuc() +"\tVariant:" + v.getVarNuc() );
 //                el.setVariant(v);
+                if (Utils.stringsAreEqual(var.getRefNuc(),v.getRefNuc()) && Utils.stringsAreEqual(var.getVarNuc(),v.getVarNuc()))
+                    return true;
                 return false;
             }
             else {
