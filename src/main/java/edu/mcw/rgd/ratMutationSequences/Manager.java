@@ -222,6 +222,7 @@ public class Manager {
         }
         catch (Exception e){
             e.printStackTrace();
+            logger.info(e.getStackTrace());
         }
         finally {
             if (pkg!=null)
