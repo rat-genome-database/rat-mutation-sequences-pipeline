@@ -308,9 +308,12 @@ public class Manager {
 //                v.setNotes(var.getNotes());
                 logger.info("\tChecking nucleotides for RGDID: " +var.getRgdId());
                 logger.info("\t\tIn DB; Reference: "+var.getRefNuc() +"\tVariant:" + var.getVarNuc() );
-                logger.info("\t\tIn DB; Reference: "+v.getRefNuc() +"\tVariant:" + v.getVarNuc() );
+                logger.info("\t\tIn File; Reference: "+v.getRefNuc() +"\tVariant:" + v.getVarNuc() );
 //                el.setVariant(v);
                 return false;
+            }
+            else {
+                logger.info("\t\tNucleotides are the same.");
             }
         }
         return false;
