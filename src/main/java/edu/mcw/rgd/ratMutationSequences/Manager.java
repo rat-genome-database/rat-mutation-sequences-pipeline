@@ -204,17 +204,17 @@ public class Manager {
 //                    dao.updateMapData(el.getMapData());
                 }
                 else {
-                    dao.insertVariant(el.getVariant(),el.getStrain().getLastStatus(), el.getVariant().getSpeciesTypeKey());
+//                    dao.insertVariant(el.getVariant(),el.getStrain().getLastStatus(), el.getVariant().getSpeciesTypeKey());
                     logger.info("Inserting variant, mapData, and association for RgdId: " + el.getVariant().getRgdId());
                     el.getMapData().setRgdId(el.getVariant().getRgdId());
-                    dao.insertMapData(el.getMapData());
+//                    dao.insertMapData(el.getMapData());
                     // create association
                     Association a = new Association();
                     a.setAssocType("variant_to_gene");
                     a.setAssocSubType("allele");
                     a.setMasterRgdId(el.getVariant().getRgdId());
                     a.setDetailRgdId(el.getAllele().getRgdId());
-                    dao.insertAssociation(a);
+//                    dao.insertAssociation(a);
                 }
             }
 
@@ -294,20 +294,23 @@ public class Manager {
             List<MapData> mapData = dao.getMapData(var.getRgdId());// check md if latest assembly exists, if not return false
             for (MapData m : mapData){
                 if (m.getMapKey()==dao.getPrimaryRefAssembly(3)) {
-                    m.setKey(md.getKey());
-                    m.setSrcPipeline("RGD");
-                    el.setMapData(m);
+                    logger.info("\tChecking mapdata for RGDID: " +var.getRgdId());
+                    logger.info("\t\tIn DB; chromosome: " +m.getChromosome() + "\tstart:" + m.getStartPos()+"\tstop: "+m.getStopPos() );
+                    logger.info("\t\tIn File; chromosome: " +md.getChromosome() + "\tstart:" + md.getStartPos()+"\tstop: "+md.getStopPos() );
                     mapExist = true;
                 }
             }
             if (!mapExist)
                 return false;
             if (var.getName().equals(v.getName()) && !var.getRefNuc().equals(v.getRefNuc())){
-                v.setRgdId(var.getRgdId());
-                v.setDescription(var.getDescription());
-                v.setNotes(var.getNotes());
-                el.setVariant(v);
-                return true;
+//                v.setRgdId(var.getRgdId());
+//                v.setDescription(var.getDescription());
+//                v.setNotes(var.getNotes());
+                logger.info("\tChecking nucleotides for RGDID: " +var.getRgdId());
+                logger.info("\t\tIn DB; Reference: "+var.getRefNuc() +"\tVariant:" + var.getVarNuc() );
+                logger.info("\t\tIn DB; Reference: "+v.getRefNuc() +"\tVariant:" + v.getVarNuc() );
+//                el.setVariant(v);
+                return false;
             }
         }
         return false;
