@@ -313,13 +313,13 @@ public class Manager {
             if (!mapExist)
                 return false;
             if (var.getName().equals(v.getName())){
-//                v.setRgdId(var.getRgdId());
+                v.setRgdId(var.getRgdId());
 //                v.setDescription(var.getDescription());
 //                v.setNotes(var.getNotes());
                 logger.info("\t\tChecking nucleotides for RGDID: " +var.getRgdId() + ", "+var.getName());
                 logger.info("\t\t\tIn DB; Reference: "+var.getRefNuc() +"\tVariant:" + var.getVarNuc() );
                 logger.info("\t\t\tIn File; Reference: "+v.getRefNuc() +"\tVariant:" + v.getVarNuc() );
-//                el.setVariant(v);
+                el.setVariant(v);
                 if (Utils.stringsAreEqual(var.getRefNuc(),v.getRefNuc()) && Utils.stringsAreEqual(var.getVarNuc(),v.getVarNuc()))
                     return true;
                 return false;
