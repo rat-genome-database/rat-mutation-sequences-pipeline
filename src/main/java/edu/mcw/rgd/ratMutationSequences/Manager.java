@@ -92,6 +92,7 @@ public class Manager {
                 MapData md = new MapData();
                 RgdVariant rv = new RgdVariant();
                 boolean isDeletion = false;
+                boolean isInsertion = false;
                 int i = 0;
                 for (i = 0; i < row.getPhysicalNumberOfCells(); i++){
                     Cell cell = row.getCell(i);
@@ -123,18 +124,24 @@ public class Manager {
                             // variant rgd_id generated when entered
                             break;
                         case 7:
-                            if (cell.getCellType()==STRING)
-                            {
-                                String name = cell.getStringCellValue();
-                                if (!rv.getName().equals(name)){
-                                    rv.setName(name);
-                                }
-                            }
+//                            if (cell.getCellType()==STRING)
+//                            {
+//                                String name = cell.getStringCellValue();
+//                                if (!rv.getName().equals(name)){
+//                                    rv.setName(name);
+//                                }
+//                            }
                             break;
                         case 8: // col 8-9 SO term name, SO:########; deletions say get reference, load second
                             String soTerm = cell.getStringCellValue().toLowerCase();
-                            if (soTerm.startsWith("del"))
+                            if (soTerm.equals("deletion"))
                                 isDeletion = true;
+                            else if (soTerm.equals("insertion"))
+                                isInsertion = true;
+                            else if (soTerm.equals("delins")) {
+                                isDeletion = true;
+                                isInsertion = true;
+                            }
                             break;
                         case 9:
                             String accId = cell.getStringCellValue();
@@ -180,7 +187,7 @@ public class Manager {
                         case 16: // col 16 is variant... trim if needed? also toUpperCase
                             if (cell.getCellType()==BLANK)
                                 rv.setVarNuc(null);
-                            else if (cell.getCellType()==STRING){
+                            else if (cell.getCellType()==STRING && isInsertion){
                                 String varNuc = cell.getStringCellValue().toUpperCase();
                                 rv.setVarNuc(varNuc);
                             }
@@ -201,22 +208,22 @@ public class Manager {
                 el.setExistingVars(vars);
                 if (varExist(el)){
                     // update RgdVariant
-                    logger.info("RGD Variant object with no change: "+el.getVariant().getRgdId());
+                    logger.info("RGD Variant object with no change: "+el.getVariant().getRgdId() + ", Var Name: "+ el.getVariant().getName());
 //                    dao.updateVariant(el.getVariant());
 //                    dao.updateMapData(el.getMapData());
                 }
                 else {
-                    dao.insertVariant(el.getVariant(),el.getStatus(), el.getVariant().getSpeciesTypeKey());
-                    logger.info("\tInserting variant, mapData, and association for RgdId: " + el.getVariant().getRgdId());
+//                    dao.insertVariant(el.getVariant(),el.getStatus(), el.getVariant().getSpeciesTypeKey());
+                    logger.info("\tInserting variant, mapData, and association for RgdId: " + el.getVariant().getRgdId() + " Var Name: "+ el.getVariant().getName());
                     el.getMapData().setRgdId(el.getVariant().getRgdId());
-                    dao.insertMapData(el.getMapData());
+//                    dao.insertMapData(el.getMapData());
                     // create association
                     Association a = new Association();
                     a.setAssocType("variant_to_gene");
                     a.setAssocSubType("allele");
                     a.setMasterRgdId(el.getVariant().getRgdId());
                     a.setDetailRgdId(el.getAllele().getRgdId());
-                    dao.insertAssociation(a);
+//                    dao.insertAssociation(a);
                 }
             }
 
@@ -231,7 +238,7 @@ public class Manager {
                 pkg.close();
         }
 
-        logger.info("rat-mutation-sequences pipeline runtime -- elapsed time: "+
+        logger.info("\nrat-mutation-sequences pipeline runtime -- elapsed time: "+
                 Utils.formatElapsedTime(pipeStart,System.currentTimeMillis()));
 
     }
@@ -297,7 +304,7 @@ public class Manager {
             List<MapData> mapData = dao.getMapData(var.getRgdId());// check md if latest assembly exists, if not return false
             for (MapData m : mapData){
                 if (m.getMapKey()==dao.getPrimaryRefAssembly(3)) {
-                    logger.info("\t\tChecking mapdata for RGDID: " +var.getRgdId());
+                    logger.info("\t\tChecking mapdata for RGDID: " +var.getRgdId() +", "+var.getName());
                     logger.info("\t\t\tIn DB; chromosome: " +m.getChromosome() + "\tstart:" + m.getStartPos()+"\tstop: "+m.getStopPos() );
                     logger.info("\t\t\tIn File; chromosome: " +md.getChromosome() + "\tstart:" + md.getStartPos()+"\tstop: "+md.getStopPos() );
                     mapExist = true;
@@ -309,7 +316,7 @@ public class Manager {
 //                v.setRgdId(var.getRgdId());
 //                v.setDescription(var.getDescription());
 //                v.setNotes(var.getNotes());
-                logger.info("\t\tChecking nucleotides for RGDID: " +var.getRgdId());
+                logger.info("\t\tChecking nucleotides for RGDID: " +var.getRgdId() + ", "+var.getName());
                 logger.info("\t\t\tIn DB; Reference: "+var.getRefNuc() +"\tVariant:" + var.getVarNuc() );
                 logger.info("\t\t\tIn File; Reference: "+v.getRefNuc() +"\tVariant:" + v.getVarNuc() );
 //                el.setVariant(v);
