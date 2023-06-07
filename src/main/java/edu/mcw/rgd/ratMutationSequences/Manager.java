@@ -206,17 +206,17 @@ public class Manager {
 //                    dao.updateMapData(el.getMapData());
                 }
                 else {
-//                    dao.insertVariant(el.getVariant(),el.getStatus(), el.getVariant().getSpeciesTypeKey());
+                    dao.insertVariant(el.getVariant(),el.getStatus(), el.getVariant().getSpeciesTypeKey());
                     logger.info("\tInserting variant, mapData, and association for RgdId: " + el.getVariant().getRgdId());
                     el.getMapData().setRgdId(el.getVariant().getRgdId());
-//                    dao.insertMapData(el.getMapData());
+                    dao.insertMapData(el.getMapData());
                     // create association
                     Association a = new Association();
                     a.setAssocType("variant_to_gene");
                     a.setAssocSubType("allele");
                     a.setMasterRgdId(el.getVariant().getRgdId());
                     a.setDetailRgdId(el.getAllele().getRgdId());
-//                    dao.insertAssociation(a);
+                    dao.insertAssociation(a);
                 }
             }
 
