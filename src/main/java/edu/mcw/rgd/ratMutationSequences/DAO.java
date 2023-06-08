@@ -61,4 +61,12 @@ public class DAO {
         return mdao.getPrimaryRefAssembly(species).getKey();
     }
 
+    public void insertStrainAssociation(int strainRgdId, int varRgdId) throws Exception{
+        adao.insertStrainAssociation(strainRgdId,varRgdId);
+    }
+
+    public List getStrainAssociations(int strainRgdId) throws Exception{
+        return adao.getStrainAssociations(strainRgdId);
+    }
+
 }

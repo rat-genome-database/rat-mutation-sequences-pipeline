@@ -1,6 +1,7 @@
 package edu.mcw.rgd.ratMutationSequences;
 
 import edu.mcw.rgd.datamodel.*;
+import edu.mcw.rgd.datamodel.Map;
 import edu.mcw.rgd.process.FastaParser;
 import edu.mcw.rgd.process.Utils;
 import org.apache.commons.codec.binary.StringUtils;
@@ -22,10 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import static org.apache.poi.ss.usermodel.CellType.BLANK;
 import static org.apache.poi.ss.usermodel.CellType.STRING;
@@ -209,10 +207,36 @@ public class Manager {
                 if (varExist(el)){
                     // update RgdVariant
                     logger.info("RGD Variant object with no change: "+el.getVariant().getRgdId() + ", Var Name: "+ el.getVariant().getName());
-//                    dao.updateVariant(el.getVariant());
-//                    dao.updateMapData(el.getMapData());
+                    List sAssoc = dao.getStrainAssociations(el.getStrain().getRgdId());
+                    for (Object o : sAssoc){
+                        boolean exist = false;
+                        try {
+                            int varRgdId = (int) o;
+                            if (varRgdId==el.getVariant().getRgdId()){
+                                exist=true;
+                            }
+
+                        }catch (Exception ignore){
+                            // if it is not an int, then it is a gene, sslp, or strain
+                        }
+                        if (!exist)
+                            dao.insertStrainAssociation(el.getStrain().getRgdId(), el.getVariant().getRgdId());
+                    }
+                    if (Utils.isStringEmpty(el.getVariant().getDescription())){
+                        if (!Utils.isStringEmpty(el.getAllele().getDescription())){
+                            String alleleDesc = el.getAllele().getDescription().substring(0,1).toLowerCase()+el.getAllele().getDescription().substring(1);
+                            el.getVariant().setNotes("Variant associated with allele "+el.getAllele().getSymbol()+"; the allele is " + alleleDesc);
+                        }
+                        else {
+                            el.getVariant().setNotes("Variant associated with allele "+el.getAllele().getSymbol());
+                        }
+                        dao.updateVariant(el.getVariant());
+                    }
+
                 }
                 else {
+                    String alleleDesc = el.getAllele().getDescription().substring(0,1).toLowerCase()+el.getAllele().getDescription().substring(1);
+                    el.getVariant().setDescription("Variant associated with allele "+el.getAllele().getSymbol()+"; the allele is " + alleleDesc);
                     dao.insertVariant(el.getVariant(),el.getStatus(), el.getVariant().getSpeciesTypeKey());
                     logger.info("\tInserting variant, mapData, and association for RgdId: " + el.getVariant().getRgdId() + " Var Name: "+ el.getVariant().getName());
                     el.getMapData().setRgdId(el.getVariant().getRgdId());
@@ -224,6 +248,7 @@ public class Manager {
                     a.setMasterRgdId(el.getVariant().getRgdId());
                     a.setDetailRgdId(el.getAllele().getRgdId());
                     dao.insertAssociation(a);
+                    dao.insertStrainAssociation(el.getStrain().getRgdId(),el.getVariant().getRgdId());
                 }
             }
 
