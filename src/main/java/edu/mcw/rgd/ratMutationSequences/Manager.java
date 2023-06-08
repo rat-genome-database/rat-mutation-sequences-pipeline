@@ -112,13 +112,6 @@ public class Manager {
                             String id = formatter.formatCellValue(cell);
                             Gene g = dao.getGene(Integer.parseInt(id));
                             el.setAllele(g);
-                            if (!Utils.isStringEmpty(el.getAllele().getDescription())){
-                                String alleleDesc = el.getAllele().getDescription().substring(0,1).toLowerCase()+el.getAllele().getDescription().substring(1);
-                                el.getVariant().setNotes("Variant associated with allele "+el.getAllele().getSymbol()+"; the allele is " + alleleDesc);
-                            }
-                            else {
-                                el.getVariant().setNotes("Variant associated with allele "+el.getAllele().getSymbol());
-                            }
                             break;
                         case 5:
                             String tmp = cell.getStringCellValue().replace("<sup>","");
@@ -211,6 +204,7 @@ public class Manager {
                 List<RgdVariant> vars;
                 vars = dao.getRgdVariantsByGeneId(el.getAllele().getRgdId());
                 el.setExistingVars(vars);
+                String alleleDesc;
                 if (varExist(el)){
                     // update RgdVariant
                     logger.info("RGD Variant object with no change: "+el.getVariant().getRgdId() + ", Var Name: "+ el.getVariant().getName());
@@ -231,19 +225,30 @@ public class Manager {
                         dao.insertStrainAssociation(el.getStrain().getRgdId(), el.getVariant().getRgdId());
                     if (Utils.isStringEmpty(el.getVariant().getDescription())){
                         if (!Utils.isStringEmpty(el.getAllele().getDescription())){
-                            String alleleDesc = el.getAllele().getDescription().substring(0,1).toLowerCase()+el.getAllele().getDescription().substring(1);
-                            el.getVariant().setNotes("Variant associated with allele "+el.getAllele().getSymbol()+"; the allele is " + alleleDesc);
+                            alleleDesc = el.getAllele().getDescription().substring(0,1).toLowerCase()+el.getAllele().getDescription().substring(1);
+                            if (alleleDesc.startsWith("this allele") || alleleDesc.startsWith("the allele") || alleleDesc.startsWith("allele"))
+                                el.getVariant().setDescription("Variant associated with allele "+el.getAllele().getSymbol()+"; " + alleleDesc);
+                            else
+                                el.getVariant().setDescription("Variant associated with allele "+el.getAllele().getSymbol()+"; the allele is " + alleleDesc);
                         }
                         else {
-                            el.getVariant().setNotes("Variant associated with allele "+el.getAllele().getSymbol());
+                            el.getVariant().setDescription("Variant associated with allele "+el.getAllele().getSymbol());
                         }
                         dao.updateVariant(el.getVariant());
                     }
 
                 }
                 else {
-                    String alleleDesc = el.getAllele().getDescription().substring(0,1).toLowerCase()+el.getAllele().getDescription().substring(1);
-                    el.getVariant().setDescription("Variant associated with allele "+el.getAllele().getSymbol()+"; the allele is " + alleleDesc);
+                    if (!Utils.isStringEmpty(el.getAllele().getDescription())){
+                        alleleDesc = el.getAllele().getDescription().substring(0,1).toLowerCase()+el.getAllele().getDescription().substring(1);
+                        if (alleleDesc.startsWith("this allele") || alleleDesc.startsWith("the allele") || alleleDesc.startsWith("allele"))
+                            el.getVariant().setDescription("Variant associated with allele "+el.getAllele().getSymbol()+"; " + alleleDesc);
+                        else
+                            el.getVariant().setDescription("Variant associated with allele "+el.getAllele().getSymbol()+"; the allele is " + alleleDesc);
+                    }
+                    else {
+                        el.getVariant().setDescription("Variant associated with allele "+el.getAllele().getSymbol());
+                    }
                     dao.insertVariant(el.getVariant(),el.getStatus(), el.getVariant().getSpeciesTypeKey());
                     logger.info("\tInserting variant, mapData, and association for RgdId: " + el.getVariant().getRgdId() + " Var Name: "+ el.getVariant().getName());
                     el.getMapData().setRgdId(el.getVariant().getRgdId());
