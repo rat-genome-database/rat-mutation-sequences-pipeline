@@ -199,7 +199,6 @@ public class Manager {
                 allelicVariants.add(el);
                 k++;
             }
-
             for (excelLine el : allelicVariants){
                 List<RgdVariant> vars;
                 vars = dao.getRgdVariantsByGeneId(el.getAllele().getRgdId());
@@ -223,7 +222,9 @@ public class Manager {
                     }
                     if (!exist)
                         dao.insertStrainAssociation(el.getStrain().getRgdId(), el.getVariant().getRgdId());
+                    String oldDesc;
                     if (Utils.isStringEmpty(el.getVariant().getDescription())){
+                        oldDesc = el.getVariant().getDescription();
                         if (!Utils.isStringEmpty(el.getAllele().getDescription())){
                             alleleDesc = el.getAllele().getDescription().substring(0,1).toLowerCase()+el.getAllele().getDescription().substring(1);
                             if (alleleDesc.startsWith("this allele") || alleleDesc.startsWith("the allele") || alleleDesc.startsWith("allele"))
@@ -234,11 +235,14 @@ public class Manager {
                         else {
                             el.getVariant().setDescription("Variant associated with allele "+el.getAllele().getSymbol());
                         }
-                        dao.updateVariant(el.getVariant());
+                        if (!Utils.stringsAreEqual(oldDesc,el.getVariant().getDescription()))
+                            dao.updateVariant(el.getVariant());
                     }
 
                 }
                 else {
+                    if (el.getConflict())
+                        continue;
                     if (!Utils.isStringEmpty(el.getAllele().getDescription())){
                         alleleDesc = el.getAllele().getDescription().substring(0,1).toLowerCase()+el.getAllele().getDescription().substring(1);
                         if (alleleDesc.startsWith("this allele") || alleleDesc.startsWith("the allele") || alleleDesc.startsWith("allele"))
@@ -337,13 +341,14 @@ public class Manager {
         RgdVariant v = el.getVariant();
         MapData md = el.getMapData();
         for (RgdVariant var : el.getExistingVars()){
+            String logMe ="";
             boolean mapExist = false;
             List<MapData> mapData = dao.getMapData(var.getRgdId());// check md if latest assembly exists, if not return false
             for (MapData m : mapData){
                 if (m.getMapKey()==dao.getPrimaryRefAssembly(3)) {
-                    logger.info("\t\tChecking mapdata for RGDID: " +var.getRgdId() +", "+var.getName());
-                    logger.info("\t\t\tIn DB; chromosome: " +m.getChromosome() + "\tstart:" + m.getStartPos()+"\tstop: "+m.getStopPos() );
-                    logger.info("\t\t\tIn File; chromosome: " +md.getChromosome() + "\tstart:" + md.getStartPos()+"\tstop: "+md.getStopPos() );
+                    logMe = "\t\tChecking mapdata for RGDID: " +var.getRgdId() +", "+var.getName() +
+                            "\n\t\t\tIn DB; chromosome: " +m.getChromosome() + "\tstart:" + m.getStartPos()+"\tstop: "+m.getStopPos() +
+                            "\n\t\t\tIn File; chromosome: " +md.getChromosome() + "\tstart:" + md.getStartPos()+"\tstop: "+md.getStopPos();
                     mapExist = true;
                 }
             }
@@ -353,16 +358,17 @@ public class Manager {
                 v.setRgdId(var.getRgdId());
 //                v.setDescription(var.getDescription());
 //                v.setNotes(var.getNotes());
-                logger.info("\t\tChecking nucleotides for RGDID: " +var.getRgdId() + ", "+var.getName());
-                logger.info("\t\t\tIn DB; Reference: "+var.getRefNuc() +"\tVariant:" + var.getVarNuc() );
-                logger.info("\t\t\tIn File; Reference: "+v.getRefNuc() +"\tVariant:" + v.getVarNuc() );
                 el.setVariant(v);
                 if (Utils.stringsAreEqual(var.getRefNuc(),v.getRefNuc()) && Utils.stringsAreEqual(var.getVarNuc(),v.getVarNuc()))
                     return true;
+                else {
+                    logger.info(logMe);
+                    logger.info("\t\tChecking nucleotides for RGDID: " +var.getRgdId() + ", "+var.getName());
+                    logger.info("\t\t\tIn DB; Reference: "+var.getRefNuc() +"\tVariant:" + var.getVarNuc() );
+                    logger.info("\t\t\tIn File; Reference: "+v.getRefNuc() +"\tVariant:" + v.getVarNuc() );
+                    el.setConflict(true);
+                }
                 return false;
-            }
-            else {
-                logger.info("\t\t\tNucleotides are the same.");
             }
         }
         return false;

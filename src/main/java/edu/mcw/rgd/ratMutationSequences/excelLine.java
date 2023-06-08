@@ -14,6 +14,7 @@ public class excelLine {
     private MapData mapData;
     private List<RgdVariant> existingVars;
     private String status;
+    private Boolean conflict = false;
 
     public Strain getStrain() {
         return strain;
@@ -61,5 +62,13 @@ public class excelLine {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Boolean getConflict() {
+        return conflict;
+    }
+
+    public void setConflict(Boolean conflict) {
+        this.conflict = conflict;
     }
 }
