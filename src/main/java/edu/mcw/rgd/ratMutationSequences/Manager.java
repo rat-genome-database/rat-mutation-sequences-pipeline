@@ -112,6 +112,13 @@ public class Manager {
                             String id = formatter.formatCellValue(cell);
                             Gene g = dao.getGene(Integer.parseInt(id));
                             el.setAllele(g);
+                            if (!Utils.isStringEmpty(el.getAllele().getDescription())){
+                                String alleleDesc = el.getAllele().getDescription().substring(0,1).toLowerCase()+el.getAllele().getDescription().substring(1);
+                                el.getVariant().setNotes("Variant associated with allele "+el.getAllele().getSymbol()+"; the allele is " + alleleDesc);
+                            }
+                            else {
+                                el.getVariant().setNotes("Variant associated with allele "+el.getAllele().getSymbol());
+                            }
                             break;
                         case 5:
                             String tmp = cell.getStringCellValue().replace("<sup>","");
