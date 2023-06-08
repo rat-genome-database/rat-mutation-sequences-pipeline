@@ -208,8 +208,8 @@ public class Manager {
                     // update RgdVariant
                     logger.info("RGD Variant object with no change: "+el.getVariant().getRgdId() + ", Var Name: "+ el.getVariant().getName());
                     List sAssoc = dao.getStrainAssociations(el.getStrain().getRgdId());
+                    boolean exist = false;
                     for (Object o : sAssoc){
-                        boolean exist = false;
                         try {
                             int varRgdId = (int) o;
                             if (varRgdId==el.getVariant().getRgdId()){
@@ -219,9 +219,9 @@ public class Manager {
                         }catch (Exception ignore){
                             // if it is not an int, then it is a gene, sslp, or strain
                         }
-                        if (!exist)
-                            dao.insertStrainAssociation(el.getStrain().getRgdId(), el.getVariant().getRgdId());
                     }
+                    if (!exist)
+                        dao.insertStrainAssociation(el.getStrain().getRgdId(), el.getVariant().getRgdId());
                     if (Utils.isStringEmpty(el.getVariant().getDescription())){
                         if (!Utils.isStringEmpty(el.getAllele().getDescription())){
                             String alleleDesc = el.getAllele().getDescription().substring(0,1).toLowerCase()+el.getAllele().getDescription().substring(1);
