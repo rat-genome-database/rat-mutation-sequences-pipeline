@@ -346,9 +346,9 @@ public class Manager {
             List<MapData> mapData = dao.getMapData(var.getRgdId());// check md if latest assembly exists, if not return false
             for (MapData m : mapData){
                 if (m.getMapKey()==dao.getPrimaryRefAssembly(3)) {
-                    logMe = "\t\tChecking mapdata for RGDID: " +var.getRgdId() +", "+var.getName() +
-                            "\n\t\t\tIn DB; chromosome: " +m.getChromosome() + "\tstart:" + m.getStartPos()+"\tstop: "+m.getStopPos() +
-                            "\n\t\t\tIn File; chromosome: " +md.getChromosome() + "\tstart:" + md.getStartPos()+"\tstop: "+md.getStopPos();
+                    logMe = "\n\t\t\tChecking mapdata for RGDID: " +var.getRgdId() +", "+var.getName() +
+                            "\n\t\t\t\tIn DB; chromosome: " +m.getChromosome() + "\tstart:" + m.getStartPos()+"\tstop: "+m.getStopPos() +
+                            "\n\t\t\t\tIn File; chromosome: " +md.getChromosome() + "\tstart:" + md.getStartPos()+"\tstop: "+md.getStopPos();
                     mapExist = true;
                 }
             }
@@ -362,10 +362,12 @@ public class Manager {
                 if (Utils.stringsAreEqual(var.getRefNuc(),v.getRefNuc()) && Utils.stringsAreEqual(var.getVarNuc(),v.getVarNuc()))
                     return true;
                 else {
+                    logger.info("\t\t~~~~~~~~~~~CONFLICT WITH RGDID: "+var.getRgdId()+"~~~~~~~~~~~~~~~");
                     logger.info(logMe);
-                    logger.info("\t\tChecking nucleotides for RGDID: " +var.getRgdId() + ", "+var.getName());
-                    logger.info("\t\t\tIn DB; Reference: "+var.getRefNuc() +"\tVariant:" + var.getVarNuc() );
-                    logger.info("\t\t\tIn File; Reference: "+v.getRefNuc() +"\tVariant:" + v.getVarNuc() );
+                    logger.info("\t\t\tChecking nucleotides for RGDID: " +var.getRgdId() + ", "+var.getName());
+                    logger.info("\t\t\t\tIn DB; Reference: "+var.getRefNuc() +"\tVariant:" + var.getVarNuc() );
+                    logger.info("\t\t\t\tIn File; Reference: "+v.getRefNuc() +"\tVariant:" + v.getVarNuc() );
+                    logger.info("\n\t\t~~~~~~~~~~~CONFLICT WITH RGDID: "+var.getRgdId()+"~~~~~~~~~~~~~~~");
                     el.setConflict(true);
                 }
                 return false;
