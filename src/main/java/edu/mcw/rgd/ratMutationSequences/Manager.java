@@ -206,7 +206,7 @@ public class Manager {
                 String alleleDesc;
                 if (varExist(el)){
                     // update RgdVariant
-                    logger.info("RGD Variant object with no change: "+el.getVariant().getRgdId() + ", Var Name: "+ el.getVariant().getName());
+                    logger.info("\tRGD Variant object with no change: "+el.getVariant().getRgdId() + ", Var Name: "+ el.getVariant().getName());
                     List sAssoc = dao.getStrainAssociations(el.getStrain().getRgdId());
                     boolean exist = false;
                     for (Object o : sAssoc){
