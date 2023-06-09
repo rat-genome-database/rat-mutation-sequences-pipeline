@@ -1,0 +1,5 @@
+June 9, 2023
+Finished parsing Excel file and insert/updating records for the variants
+
+May 25, 2023
+Started pipeline to insert rat mutation variants
