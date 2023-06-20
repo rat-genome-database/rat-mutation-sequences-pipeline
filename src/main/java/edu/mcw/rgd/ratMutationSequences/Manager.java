@@ -73,55 +73,58 @@ public class Manager {
             DataFormatter formatter = new DataFormatter();
             pkg = OPCPackage.open(chosenFile);
             XSSFWorkbook workbook = new XSSFWorkbook(pkg);
-            XSSFSheet sheet = workbook.getSheetAt(0);
-            Iterator<Row> rowIterator = sheet.iterator();
-            List<excelLine> allelicVariants = new ArrayList<>();
-            List<Map> ratMaps = dao.getMaps(3);
-            int k = 0;
-            while(rowIterator.hasNext()){
-                Row row = rowIterator.next();
-                if (k < 2 || checkIfRowIsEmpty(row)) {
-                    k++;
-                    continue;
-                }
-                // first 2 rows are about the columns
-                Iterator <Cell> cellIterator = row.cellIterator();
-                excelLine el = new excelLine();
-                MapData md = new MapData();
-                RgdVariant rv = new RgdVariant();
-                boolean isDeletion = false;
-                boolean isInsertion = false;
-                int i = 0;
-                for (i = 0; i < row.getPhysicalNumberOfCells(); i++){
-                    Cell cell = row.getCell(i);
-                    if (cell == null)
+            for (int ws = 0; ws < workbook.getNumberOfSheets(); ws++) {
+                logger.info("\n");
+                logger.info("\t============="+workbook.getSheetName(ws)+"=============");
+                XSSFSheet sheet = workbook.getSheetAt(ws);
+                Iterator<Row> rowIterator = sheet.iterator();
+                List<excelLine> allelicVariants = new ArrayList<>();
+                List<Map> ratMaps = dao.getMaps(3);
+                int k = 0;
+                while (rowIterator.hasNext()) {
+                    Row row = rowIterator.next();
+                    if (k < 2 || checkIfRowIsEmpty(row)) {
+                        k++;
                         continue;
-                    switch (i) {
-                        case 0: // col 0-3 are about strains
-                            String strainId = formatter.formatCellValue(cell);
-                            Strain s = dao.getStrain(Integer.parseInt(strainId));
-                            el.setStrain(s);
-                            break;
-                        case 1:
-                        case 2:
-                        case 3:
-                            String status = cell.getStringCellValue();
-                            el.setStatus(status);
-                            break;
-                        case 4: // col 4-5 about allele
-                            String id = formatter.formatCellValue(cell);
-                            Gene g = dao.getGene(Integer.parseInt(id));
-                            el.setAllele(g);
-                            break;
-                        case 5:
-                            String tmp = cell.getStringCellValue().replace("<sup>","");
-                            String varSym = tmp.replace("</sup>","");
-                            rv.setName(varSym + "-var1");
-                            break;
-                        case 6:  // col 6-7 about variant, generate rgd_id and create name (remove <sup></sup> and add "-var1")
-                            // variant rgd_id generated when entered
-                            break;
-                        case 7:
+                    }
+                    // first 2 rows are about the columns
+                    Iterator<Cell> cellIterator = row.cellIterator();
+                    excelLine el = new excelLine();
+                    MapData md = new MapData();
+                    RgdVariant rv = new RgdVariant();
+                    boolean isDeletion = false;
+                    boolean isInsertion = false;
+                    int i = 0;
+                    for (i = 0; i < row.getPhysicalNumberOfCells(); i++) {
+                        Cell cell = row.getCell(i);
+                        if (cell == null)
+                            continue;
+                        switch (i) {
+                            case 0: // col 0-3 are about strains
+                                String strainId = formatter.formatCellValue(cell);
+                                Strain s = dao.getStrain(Integer.parseInt(strainId));
+                                el.setStrain(s);
+                                break;
+                            case 1:
+                            case 2:
+                            case 3:
+                                String status = cell.getStringCellValue();
+                                el.setStatus(status);
+                                break;
+                            case 4: // col 4-5 about allele
+                                String id = formatter.formatCellValue(cell);
+                                Gene g = dao.getGene(Integer.parseInt(id));
+                                el.setAllele(g);
+                                break;
+                            case 5:
+                                String tmp = cell.getStringCellValue().replace("<sup>", "");
+                                String varSym = tmp.replace("</sup>", "");
+                                rv.setName(varSym + "-var1");
+                                break;
+                            case 6:  // col 6-7 about variant, generate rgd_id and create name (remove <sup></sup> and add "-var1")
+                                // variant rgd_id generated when entered
+                                break;
+                            case 7:
 //                            if (cell.getCellType()==STRING)
 //                            {
 //                                String name = cell.getStringCellValue();
@@ -129,51 +132,51 @@ public class Manager {
 //                                    rv.setName(name);
 //                                }
 //                            }
-                            break;
-                        case 8: // col 8-9 SO term name, SO:########; deletions say get reference, load second
-                            String soTerm = cell.getStringCellValue().toLowerCase();
-                            if (soTerm.equals("deletion"))
-                                isDeletion = true;
-                            else if (soTerm.equals("insertion"))
-                                isInsertion = true;
-                            else if (soTerm.equals("delins")) {
-                                isDeletion = true;
-                                isInsertion = true;
-                            }
-                            break;
-                        case 9:
-                            String accId = cell.getStringCellValue();
-                            rv.setType(accId);
-                            break;
-                        case 10: // col 10 is assembly, remove "()" and get proper map key or check for "mRatBN7.2" and put 372
-                            String asm = cell.getStringCellValue().replaceAll("[\\[\\](){}]", "");
-                            String[] assemblies = asm.split("/");
-                            md.setMapKey(getMapKey(assemblies[0],ratMaps));
-                            rv.setSpeciesTypeKey(3);
-                            break;
-                        case 11: // col 11-13 position in chromosome, shave off "chr" and remove ',' in position
-                            String chr = cell.getStringCellValue().substring(3);
-                            md.setChromosome(chr);
-                            md.setStrand("+");
-                            md.setSrcPipeline("RGD");
-                            break;
-                        case 12:
-                            String startStr = formatter.formatCellValue(cell).replace(",","");
-                            int start = Integer.parseInt(startStr);
-                            md.setStartPos(start);
-                            break;
-                        case 13:
-                            String stopStr = formatter.formatCellValue(cell).replace(",","");
-                            int stop = Integer.parseInt(stopStr);
-                            md.setStopPos(stop);
-                            break;
-                        case 14: // col 14/15 use getRefAllele method and make changes, so it is not gwas
-                            if (isDeletion){
-                                String ref = getRefAllele(md.getMapKey(),md).replaceAll("[\\n\\r\\s]", "");
-                                rv.setRefNuc(ref.toUpperCase());
-                            }
-                            break;
-                        case 15:
+                                break;
+                            case 8: // col 8-9 SO term name, SO:########; deletions say get reference, load second
+                                String soTerm = cell.getStringCellValue().toLowerCase();
+                                if (soTerm.equals("deletion"))
+                                    isDeletion = true;
+                                else if (soTerm.equals("insertion"))
+                                    isInsertion = true;
+                                else if (soTerm.equals("delins")) {
+                                    isDeletion = true;
+                                    isInsertion = true;
+                                }
+                                break;
+                            case 9:
+                                String accId = cell.getStringCellValue();
+                                rv.setType(accId);
+                                break;
+                            case 10: // col 10 is assembly, remove "()" and get proper map key or check for "mRatBN7.2" and put 372
+                                String asm = cell.getStringCellValue().replaceAll("[\\[\\](){}]", "");
+                                String[] assemblies = asm.split("/");
+                                md.setMapKey(getMapKey(assemblies[0], ratMaps));
+                                rv.setSpeciesTypeKey(3);
+                                break;
+                            case 11: // col 11-13 position in chromosome, shave off "chr" and remove ',' in position
+                                String chr = cell.getStringCellValue().substring(3);
+                                md.setChromosome(chr);
+                                md.setStrand("+");
+                                md.setSrcPipeline("RGD");
+                                break;
+                            case 12:
+                                String startStr = formatter.formatCellValue(cell).replace(",", "");
+                                int start = Integer.parseInt(startStr);
+                                md.setStartPos(start);
+                                break;
+                            case 13:
+                                String stopStr = formatter.formatCellValue(cell).replace(",", "");
+                                int stop = Integer.parseInt(stopStr);
+                                md.setStopPos(stop);
+                                break;
+                            case 14: // col 14/15 use getRefAllele method and make changes, so it is not gwas
+                                if (isDeletion) {
+                                    String ref = getRefAllele(md.getMapKey(), md).replaceAll("[\\n\\r\\s]", "");
+                                    rv.setRefNuc(ref.toUpperCase());
+                                }
+                                break;
+                            case 15:
 //                            if (cell.getCellType()==STRING){
 //                                String refNuc = cell.getStringCellValue().toUpperCase();
 //                                refNuc = refNuc.replace(" ","");
@@ -181,93 +184,95 @@ public class Manager {
 //                                if (refNuc.equals(rv.getRefNuc()))
 //                                    rv.setRefNuc(refNuc);
 //                            }
-                            break;
-                        case 16: // col 16 is variant... trim if needed? also toUpperCase
-                            if (cell.getCellType()==BLANK)
-                                rv.setVarNuc(null);
-                            else if (cell.getCellType()==STRING && isInsertion){
-                                String varNuc = cell.getStringCellValue().toUpperCase();
-                                rv.setVarNuc(varNuc);
-                            }
-                            break;
+                                break;
+                            case 16: // col 16 is variant... trim if needed? also toUpperCase
+                                if (cell.getCellType() == BLANK)
+                                    rv.setVarNuc(null);
+                                else if (cell.getCellType() == STRING && isInsertion) {
+                                    String varNuc = cell.getStringCellValue().toUpperCase();
+                                    rv.setVarNuc(varNuc);
+                                }
+                                break;
 
-                    }
-
-                }
-                el.setVariant(rv);
-                el.setMapData(md);
-                allelicVariants.add(el);
-                k++;
-            }
-            for (excelLine el : allelicVariants){
-                List<RgdVariant> vars;
-                vars = dao.getRgdVariantsByGeneId(el.getAllele().getRgdId());
-                el.setExistingVars(vars);
-                String alleleDesc;
-                if (varExist(el)){
-                    // update RgdVariant
-                    logger.info("\tRGD Variant object with no change: "+el.getVariant().getRgdId() + ", Var Name: "+ el.getVariant().getName());
-                    List sAssoc = dao.getStrainAssociations(el.getStrain().getRgdId());
-                    boolean exist = false;
-                    for (Object o : sAssoc){
-                        try {
-                            int varRgdId = (int) o;
-                            if (varRgdId==el.getVariant().getRgdId()){
-                                exist=true;
-                            }
-
-                        }catch (Exception ignore){
-                            // if it is not an int, then it is a gene, sslp, or strain
                         }
+
                     }
-                    if (!exist)
-                        dao.insertStrainAssociation(el.getStrain().getRgdId(), el.getVariant().getRgdId());
-                    String oldDesc;
-                    if (Utils.isStringEmpty(el.getVariant().getDescription())){
-                        oldDesc = el.getVariant().getDescription();
-                        if (!Utils.isStringEmpty(el.getAllele().getDescription())){
-                            alleleDesc = el.getAllele().getDescription().substring(0,1).toLowerCase()+el.getAllele().getDescription().substring(1);
-                            if (alleleDesc.startsWith("this allele") || alleleDesc.startsWith("the allele") || alleleDesc.startsWith("allele"))
-                                el.getVariant().setDescription("Variant associated with allele "+el.getAllele().getSymbol()+"; " + alleleDesc);
+                    el.setVariant(rv);
+                    el.setMapData(md);
+                    allelicVariants.add(el);
+                    k++;
+                }
+                for (excelLine el : allelicVariants) {
+                    List<RgdVariant> vars;
+                    vars = dao.getRgdVariantsByGeneId(el.getAllele().getRgdId());
+                    el.setExistingVars(vars);
+                    String alleleDesc = "";
+                    if (varExist(el)) {
+                        // update RgdVariant
+                        logger.info("\tRGD Variant object with no change: " + el.getVariant().getRgdId() + ", Var Name: " + el.getVariant().getName());
+                        List sAssoc = dao.getStrainAssociations(el.getStrain().getRgdId());
+                        boolean exist = false;
+                        for (Object o : sAssoc) {
+                            try {
+                                int varRgdId = (int) o;
+                                if (varRgdId == el.getVariant().getRgdId()) {
+                                    exist = true;
+                                }
+
+                            } catch (Exception ignore) {
+                                // if it is not an int, then it is a gene, sslp, or strain
+                            }
+                        }
+                        if (!exist) {
+                            logger.info("\t Adding strain association between strain:"+ el.getStrain().getRgdId() + " and variant:"+el.getVariant().getRgdId());
+                            dao.insertStrainAssociation(el.getStrain().getRgdId(), el.getVariant().getRgdId());
+                        }
+                        String oldDesc;
+                        if (Utils.isStringEmpty(el.getVariant().getDescription())) {
+                            oldDesc = el.getVariant().getDescription();
+                            if (!Utils.isStringEmpty(el.getAllele().getDescription())) {
+                                alleleDesc = el.getAllele().getDescription().substring(0, 1).toLowerCase() + el.getAllele().getDescription().substring(1);
+                                if (alleleDesc.startsWith("this allele") || alleleDesc.startsWith("the allele") || alleleDesc.startsWith("allele"))
+                                    el.getVariant().setDescription("Variant associated with allele " + el.getAllele().getSymbol() + "; " + alleleDesc);
+                                else
+                                    el.getVariant().setDescription("Variant associated with allele " + el.getAllele().getSymbol() + "; the allele is " + alleleDesc);
+                            } else {
+                                el.getVariant().setDescription("Variant associated with allele " + el.getAllele().getSymbol());
+                            }
+                            if (!Utils.stringsAreEqual(oldDesc, el.getVariant().getDescription()))
+                                dao.updateVariant(el.getVariant());
+                        }
+
+                    } else {
+                        if (el.getConflict())
+                            continue;
+                        if (!Utils.isStringEmpty(el.getAllele().getDescription())) {
+                            if (el.getAllele().getDescription().startsWith("CRISPR/Cas9") || el.getAllele().getDescription().startsWith("ZFN") || el.getAllele().getDescription().startsWith("TALEN"))
+                                alleleDesc = el.getAllele().getDescription();
                             else
-                                el.getVariant().setDescription("Variant associated with allele "+el.getAllele().getSymbol()+"; the allele is " + alleleDesc);
+                                alleleDesc = el.getAllele().getDescription().substring(0, 1).toLowerCase() + el.getAllele().getDescription().substring(1);
+                            if (alleleDesc.startsWith("this allele") || alleleDesc.startsWith("the allele") || alleleDesc.startsWith("allele"))
+                                el.getVariant().setDescription("Variant associated with allele " + el.getAllele().getSymbol() + "; " + alleleDesc);
+                            else
+                                el.getVariant().setDescription("Variant associated with allele " + el.getAllele().getSymbol() + "; " + alleleDesc);
+                        } else {
+                            el.getVariant().setDescription("Variant associated with allele " + el.getAllele().getSymbol());
                         }
-                        else {
-                            el.getVariant().setDescription("Variant associated with allele "+el.getAllele().getSymbol());
-                        }
-                        if (!Utils.stringsAreEqual(oldDesc,el.getVariant().getDescription()))
-                            dao.updateVariant(el.getVariant());
+                        dao.insertVariant(el.getVariant(), el.getStatus(), el.getVariant().getSpeciesTypeKey());
+                        logger.info("\tInserting variant, mapData, and association for RgdId: " + el.getVariant().getRgdId() + " Var Name: " + el.getVariant().getName());
+                        el.getMapData().setRgdId(el.getVariant().getRgdId());
+                        dao.insertMapData(el.getMapData());
+                        // create association
+                        Association a = new Association();
+                        a.setAssocType("variant_to_gene");
+                        a.setAssocSubType("allele");
+                        a.setMasterRgdId(el.getVariant().getRgdId());
+                        a.setDetailRgdId(el.getAllele().getRgdId());
+                        dao.insertAssociation(a);
+                        dao.insertStrainAssociation(el.getStrain().getRgdId(), el.getVariant().getRgdId());
                     }
-
-                }
-                else {
-                    if (el.getConflict())
-                        continue;
-                    if (!Utils.isStringEmpty(el.getAllele().getDescription())){
-                        alleleDesc = el.getAllele().getDescription().substring(0,1).toLowerCase()+el.getAllele().getDescription().substring(1);
-                        if (alleleDesc.startsWith("this allele") || alleleDesc.startsWith("the allele") || alleleDesc.startsWith("allele"))
-                            el.getVariant().setDescription("Variant associated with allele "+el.getAllele().getSymbol()+"; " + alleleDesc);
-                        else
-                            el.getVariant().setDescription("Variant associated with allele "+el.getAllele().getSymbol()+"; the allele is " + alleleDesc);
-                    }
-                    else {
-                        el.getVariant().setDescription("Variant associated with allele "+el.getAllele().getSymbol());
-                    }
-                    dao.insertVariant(el.getVariant(),el.getStatus(), el.getVariant().getSpeciesTypeKey());
-                    logger.info("\tInserting variant, mapData, and association for RgdId: " + el.getVariant().getRgdId() + " Var Name: "+ el.getVariant().getName());
-                    el.getMapData().setRgdId(el.getVariant().getRgdId());
-                    dao.insertMapData(el.getMapData());
-                    // create association
-                    Association a = new Association();
-                    a.setAssocType("variant_to_gene");
-                    a.setAssocSubType("allele");
-                    a.setMasterRgdId(el.getVariant().getRgdId());
-                    a.setDetailRgdId(el.getAllele().getRgdId());
-                    dao.insertAssociation(a);
-                    dao.insertStrainAssociation(el.getStrain().getRgdId(),el.getVariant().getRgdId());
-                }
-            }
-
+                } // end excelLine for
+            }// end workbook for
 
         }
         catch (Exception e){
@@ -333,7 +338,21 @@ public class Manager {
             if (assembly.equals(m.getName()))
                 return m.getKey(); // returns found map key
         }
-        return 372; // returns primary assembly
+        // if it cannot find assembly by name, convenient switch case
+        switch (assembly){
+            case "rn5":
+            case "RGSC 5.0":
+                return 70;
+            case "rn6":
+            case "RGSC 6.0":
+                return 360;
+            case "rn7":
+            case "mRatBN7.2":
+                return 372;
+            default:
+                return 372; // returns primary assembly
+        }
+
     }
 
     public boolean varExist(excelLine el) throws Exception {
