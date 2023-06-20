@@ -1,3 +1,6 @@
+June 20, 2023
+updating to load rn6 and rn5 variants
+
 June 9, 2023
 Finished parsing Excel file and insert/updating records for the variants
 
