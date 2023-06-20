@@ -207,6 +207,13 @@ public class Manager {
                     vars = dao.getRgdVariantsByGeneId(el.getAllele().getRgdId());
                     el.setExistingVars(vars);
                     String alleleDesc = "";
+                    if (el.getVariant().getRefNuc()!=null && el.getVariant().getRefNuc().length()>4000){
+                        logger.info("\n\t~~~~~~~~~ REFERENCE SIZE ISSUE ~~~~~~~~~");
+                        logger.info("\t\t Reference is larger than what the database can store for allele " +el.getAllele().getSymbol());
+                        logger.info("\t\t Chromosome: "+el.getMapData().getChromosome()+" Start: " +el.getMapData().getStartPos() +" Stop: "+el.getMapData().getStopPos());
+                        logger.info("\t~~~~~~~~~ REFERENCE SIZE ISSUE ~~~~~~~~~\n");
+                        continue;
+                    }
                     if (varExist(el)) {
                         // update RgdVariant
                         logger.info("\tRGD Variant object with no change: " + el.getVariant().getRgdId() + ", Var Name: " + el.getVariant().getName());
@@ -364,7 +371,7 @@ public class Manager {
             boolean mapExist = false;
             List<MapData> mapData = dao.getMapData(var.getRgdId());// check md if latest assembly exists, if not return false
             for (MapData m : mapData){
-                if (m.getMapKey()==dao.getPrimaryRefAssembly(3)) {
+                if (Objects.equals(m.getMapKey(), md.getMapKey())) {
                     logMe = "\n\t\t\tChecking mapdata for RGDID: " +var.getRgdId() +", "+var.getName() +
                             "\n\t\t\t\tIn DB; chromosome: " +m.getChromosome() + "\tstart:" + m.getStartPos()+"\tstop: "+m.getStopPos() +
                             "\n\t\t\t\tIn File; chromosome: " +md.getChromosome() + "\tstart:" + md.getStartPos()+"\tstop: "+md.getStopPos();
