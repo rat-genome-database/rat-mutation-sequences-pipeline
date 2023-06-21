@@ -207,13 +207,6 @@ public class Manager {
                     vars = dao.getRgdVariantsByGeneId(el.getAllele().getRgdId());
                     el.setExistingVars(vars);
                     String alleleDesc = "";
-                    if (el.getVariant().getRefNuc()!=null && el.getVariant().getRefNuc().length()>4000){
-                        logger.info("\n\t~~~~~~~~~ REFERENCE SIZE ISSUE ~~~~~~~~~");
-                        logger.info("\t\t Reference is larger than what the database can store for allele " +el.getAllele().getSymbol());
-                        logger.info("\t\t Chromosome: "+el.getMapData().getChromosome()+" Start: " +el.getMapData().getStartPos() +" Stop: "+el.getMapData().getStopPos());
-                        logger.info("\t~~~~~~~~~ REFERENCE SIZE ISSUE ~~~~~~~~~\n");
-                        continue;
-                    }
                     if (varExist(el)) {
                         // update RgdVariant
                         logger.info("\tRGD Variant object with no change: " + el.getVariant().getRgdId() + ", Var Name: " + el.getVariant().getName());
@@ -238,11 +231,14 @@ public class Manager {
                         if (Utils.isStringEmpty(el.getVariant().getDescription())) {
                             oldDesc = el.getVariant().getDescription();
                             if (!Utils.isStringEmpty(el.getAllele().getDescription())) {
-                                alleleDesc = el.getAllele().getDescription().substring(0, 1).toLowerCase() + el.getAllele().getDescription().substring(1);
+                                if (el.getAllele().getDescription().startsWith("CRISPR/Cas9") || el.getAllele().getDescription().startsWith("ZFN") || el.getAllele().getDescription().startsWith("TALEN"))
+                                    alleleDesc = el.getAllele().getDescription();
+                                else
+                                    alleleDesc = el.getAllele().getDescription().substring(0, 1).toLowerCase() + el.getAllele().getDescription().substring(1);
                                 if (alleleDesc.startsWith("this allele") || alleleDesc.startsWith("the allele") || alleleDesc.startsWith("allele"))
                                     el.getVariant().setDescription("Variant associated with allele " + el.getAllele().getSymbol() + "; " + alleleDesc);
                                 else
-                                    el.getVariant().setDescription("Variant associated with allele " + el.getAllele().getSymbol() + "; the allele is " + alleleDesc);
+                                    el.getVariant().setDescription("Variant associated with allele " + el.getAllele().getSymbol() + "; " + alleleDesc);
                             } else {
                                 el.getVariant().setDescription("Variant associated with allele " + el.getAllele().getSymbol());
                             }
@@ -265,7 +261,18 @@ public class Manager {
                         } else {
                             el.getVariant().setDescription("Variant associated with allele " + el.getAllele().getSymbol());
                         }
+                        if (el.getVariant().getRefNuc()!=null && el.getVariant().getRefNuc().length()>4000){
+                            el.getVariant().setRefNuc(null);
+                            el.setStatus("WITHDRAWN");
+                            el.setConflict(true);
+                        }
                         dao.insertVariant(el.getVariant(), el.getStatus(), el.getVariant().getSpeciesTypeKey());
+                        if (el.getConflict()){
+                            logger.info("\t~~~~~~~~~ CONFLICT for RGD:"+el.getVariant().getRgdId()+" ~~~~~~~~~");
+                            logger.info("\t\t Reference is larger than what the database can store for allele " +el.getAllele().getSymbol());
+                            logger.info("\t\t Chromosome: "+el.getMapData().getChromosome()+" Start: " +el.getMapData().getStartPos() +" Stop: "+el.getMapData().getStopPos());
+                            logger.info("\t~~~~~~~~~ CONFLICT for RGD:"+el.getVariant().getRgdId()+" ~~~~~~~~~\n");
+                        }
                         logger.info("\tInserting variant, mapData, and association for RgdId: " + el.getVariant().getRgdId() + " Var Name: " + el.getVariant().getName());
                         el.getMapData().setRgdId(el.getVariant().getRgdId());
                         dao.insertMapData(el.getMapData());
