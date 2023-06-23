@@ -261,18 +261,7 @@ public class Manager {
                         } else {
                             el.getVariant().setDescription("Variant associated with allele " + el.getAllele().getSymbol());
                         }
-                        if (el.getVariant().getRefNuc()!=null && el.getVariant().getRefNuc().length()>4000){
-                            el.getVariant().setRefNuc(null);
-                            el.setStatus("WITHDRAWN");
-                            el.setConflict(true);
-                        }
                         dao.insertVariant(el.getVariant(), el.getStatus(), el.getVariant().getSpeciesTypeKey());
-                        if (el.getConflict()){
-                            logger.info("\t~~~~~~~~~ REFERENCE NUCLEOTIDE CONFLICT for RGD:"+el.getVariant().getRgdId()+" ~~~~~~~~~");
-                            logger.info("\t\t Reference is larger than what the database can store for allele " +el.getAllele().getSymbol());
-                            logger.info("\t\t Chromosome: "+el.getMapData().getChromosome()+" Start: " +el.getMapData().getStartPos() +" Stop: "+el.getMapData().getStopPos());
-                            logger.info("\t~~~~~~~~~ REFERENCE NUCLEOTIDE CONFLICT for RGD:"+el.getVariant().getRgdId()+" ~~~~~~~~~\n");
-                        }
                         logger.info("\tInserting variant, mapData, and association for RgdId: " + el.getVariant().getRgdId() + " Var Name: " + el.getVariant().getName());
                         el.getMapData().setRgdId(el.getVariant().getRgdId());
                         dao.insertMapData(el.getMapData());
